@@ -37,13 +37,16 @@ class MessageSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Message
-        fields = ['id', 'content', 'timestamp', 'is_from_me', 'sender_id']
+        fields = ['id', 'content', 'timestamp', 'is_from_me', 'sender_id', 'message_type']
         read_only_fields = ['id', 'timestamp']
     
     def get_is_from_me(self, obj):
         """메시지가 현재 사용자로부터 온 것인지 확인"""
         request = self.context.get('request')
         if request and hasattr(request, 'user'):
+            # 시스템 메시지는 항상 상대방 메시지로 표시
+            if obj.message_type and obj.message_type != 'text':
+                return False
             return obj.sender == request.user
         return False
 
@@ -86,7 +89,13 @@ class ChatRoomSerializer(serializers.ModelSerializer):
                 'timestamp': last_message.created_at,
                 'is_from_me': is_from_me
             }
-        return None
+        else:
+            # 메시지가 없는 경우 채팅방 생성 시간 반환
+            return {
+                'content': None,
+                'timestamp': obj.created_at,
+                'is_from_me': False
+            }
     
     def get_unread_count(self, obj):
         """읽지 않은 메시지 수 반환"""

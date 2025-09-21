@@ -230,34 +230,6 @@ class ProfileView(generics.RetrieveUpdateAPIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@api_view(['PUT'])
-@permission_classes([permissions.IsAuthenticated])
-def change_password(request):
-    """비밀번호 변경 API"""
-    print(f"비밀번호 변경 요청 받음: {request.data}")
-    print(f"사용자: {request.user.email}")
-    
-    serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
-    if serializer.is_valid():
-        print("시리얼라이저 검증 성공")
-        user = request.user
-        user.set_password(serializer.validated_data['new_password'])
-        user.save()
-        print("비밀번호 변경 완료")
-        
-        return Response({
-            'success': True,
-            'message': '비밀번호가 성공적으로 변경되었습니다.'
-        }, status=status.HTTP_200_OK)
-    
-    print(f"시리얼라이저 검증 실패: {serializer.errors}")
-    return Response({
-        'success': False,
-        'message': '비밀번호 변경 중 오류가 발생했습니다.',
-        'errors': serializer.errors
-    }, status=status.HTTP_400_BAD_REQUEST)
-
-
 @api_view(['DELETE'])
 @permission_classes([permissions.IsAuthenticated])
 def delete_account(request):
@@ -291,3 +263,34 @@ def get_user_profile(request, user_id):
             'success': False,
             'message': '사용자를 찾을 수 없습니다.'
         }, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def change_password(request):
+    """비밀번호 변경 API"""
+    serializer = ChangePasswordSerializer(data=request.data, context={'user': request.user})
+    
+    if serializer.is_valid():
+        # 현재 비밀번호 확인
+        current_password = serializer.validated_data['current_password']
+        if not request.user.check_password(current_password):
+            return Response({
+                'success': False,
+                'message': '현재 비밀번호가 올바르지 않습니다.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 새 비밀번호 설정
+        new_password = serializer.validated_data['new_password']
+        request.user.set_password(new_password)
+        request.user.save()
+        
+        return Response({
+            'success': True,
+            'message': '비밀번호가 성공적으로 변경되었습니다.'
+        }, status=status.HTTP_200_OK)
+    
+    return Response({
+        'success': False,
+        'message': serializer.errors
+    }, status=status.HTTP_400_BAD_REQUEST)

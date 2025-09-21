@@ -103,26 +103,6 @@ class UserLoginSerializer(serializers.Serializer):
         return attrs
 
 
-class ChangePasswordSerializer(serializers.Serializer):
-    """비밀번호 변경 시리얼라이저"""
-    current_password = serializers.CharField()
-    new_password = serializers.CharField(validators=[validate_password])
-    new_password_confirm = serializers.CharField()
-    
-    def validate(self, attrs):
-        """비밀번호 변경 검증"""
-        if attrs['new_password'] != attrs['new_password_confirm']:
-            raise serializers.ValidationError("새 비밀번호가 일치하지 않습니다.")
-        return attrs
-    
-    def validate_current_password(self, value):
-        """현재 비밀번호 검증"""
-        user = self.context['request'].user
-        if not user.check_password(value):
-            raise serializers.ValidationError("현재 비밀번호가 올바르지 않습니다.")
-        return value
-
-
 class DeleteAccountSerializer(serializers.Serializer):
     """계정 삭제 시리얼라이저"""
     password = serializers.CharField()
@@ -133,3 +113,25 @@ class DeleteAccountSerializer(serializers.Serializer):
         if not user.check_password(value):
             raise serializers.ValidationError("비밀번호가 올바르지 않습니다.")
         return value
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    """비밀번호 변경 시리얼라이저"""
+    current_password = serializers.CharField(required=True, write_only=True)
+    new_password = serializers.CharField(required=True, write_only=True, min_length=8)
+    
+    def validate_new_password(self, value):
+        """새 비밀번호 검증"""
+        validate_password(value)
+        return value
+    
+    def validate(self, attrs):
+        """전체 데이터 검증"""
+        current_password = attrs.get('current_password')
+        new_password = attrs.get('new_password')
+        
+        # 현재 비밀번호와 새 비밀번호가 같은지 확인
+        if current_password == new_password:
+            raise serializers.ValidationError("새 비밀번호는 현재 비밀번호와 달라야 합니다.")
+        
+        return attrs

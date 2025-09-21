@@ -40,9 +40,11 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
+    "channels",
     "users",
     "matching",
     "chat",
+    "notifications",
 ]
 
 MIDDLEWARE = [
@@ -141,10 +143,11 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:3001",  # 추가 포트 지원
     "http://127.0.0.1:3001",
+    "https://uni-lingo-client.vercel.app",  # 프로덕션 프론트엔드 도메인
 ]
 
-# 개발용으로 모든 origin 허용 (필요시 주석 해제)
-# CORS_ALLOW_ALL_ORIGINS = True
+# 프로덕션에서는 특정 도메인만 허용
+CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=True, cast=bool)
 
 # 허용할 헤더
 CORS_ALLOW_HEADERS = [
@@ -174,6 +177,14 @@ CORS_ALLOW_CREDENTIALS = True
 
 # CORS preflight 요청 캐시 시간 (초)
 CORS_PREFLIGHT_MAX_AGE = 86400
+
+# 웹소켓을 위한 CORS 설정
+CORS_ALLOW_WEBSOCKET_ORIGINS = [
+    "ws://localhost:8000",
+    "ws://127.0.0.1:8000",
+    "wss://localhost:8000",
+    "wss://127.0.0.1:8000",
+]
 
 # REST Framework settings
 REST_FRAMEWORK = {
@@ -216,4 +227,13 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+}
+
+# Channels 설정
+ASGI_APPLICATION = 'language_exchange.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
 }

@@ -1,0 +1,32 @@
+# UniLingo Django 프로덕션 환경 변수 설정 예시
+# 실제 EC2 서버에서 이 파일을 .env로 복사하고 실제 값으로 수정하세요
+
+# Django 기본 설정
+DEBUG=False
+SECRET_KEY=your-very-secure-secret-key-here-change-this
+ALLOWED_HOSTS=localhost,127.0.0.1,your-ec2-public-ip,uni-lingo-client.vercel.app
+
+# Neon PostgreSQL 데이터베이스 연결
+# Neon 대시보드에서 Connection String을 복사해서 사용하세요
+DATABASE_URL=postgresql://neondb_owner:npg_s2YeM3PySBvc@ep-restless-base-a1u4sidb-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+
+# CORS 설정
+CORS_ALLOW_ALL_ORIGINS=False
+
+# 시간대
+TIME_ZONE=Asia/Seoul
+
+# Redis 설정 (선택사항 - 캐싱용)
+REDIS_URL=redis://localhost:6379/1
+
+# 이메일 설정 (선택사항)
+# EMAIL_HOST_USER=your-email@gmail.com
+# EMAIL_HOST_PASSWORD=your-app-password
+
+# AWS S3 설정 (선택사항 - 미디어 파일용)
+# AWS_ACCESS_KEY_ID=your-access-key
+# AWS_SECRET_ACCESS_KEY=your-secret-key
+# AWS_STORAGE_BUCKET_NAME=your-bucket-name
+# AWS_S3_REGION_NAME=ap-northeast-2
+
+

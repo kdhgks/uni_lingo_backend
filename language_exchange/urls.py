@@ -25,6 +25,8 @@ urlpatterns = [
     path("api/", include("users.urls")),
     path("api/", include("matching.urls")),
     path("api/", include("chat.urls")),
+    path("api/", include("notifications.urls")),
+    path("", include("health.urls")),  # 헬스체크 엔드포인트
 ]
 
 # 개발 환경에서 미디어 파일 서빙

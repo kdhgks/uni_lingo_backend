@@ -307,25 +307,12 @@ def get_available_partners(request):
         }, status=status.HTTP_400_BAD_REQUEST)
     
     # 매칭 가능한 사용자 찾기
-    # 1. 요청자 본인만 제외 (이미 매칭된 사용자도 매칭 가능하도록 허용)
-    potential_partners = User.objects.exclude(id=matching_request.user_id)
+    # 승인 대기 중인 신청자들만 표시 (요청자 본인 제외)
+    pending_requests = MatchingRequest.objects.filter(status='pending').exclude(user_id=matching_request.user_id)
+    pending_user_ids = [req.user_id for req in pending_requests]
     
-    # 2. 성별 선호도 필터링
-    if gender_preference and gender_preference != 'any':
-        potential_partners = potential_partners.filter(gender=gender_preference)
-    
-    # 3. 대학교 선호도 필터링
-    if university_preference and university_preference != 'any':
-        if university_preference == 'same':
-            potential_partners = potential_partners.filter(
-                university=matching_request.user.university
-            )
-        elif university_preference == 'different':
-            potential_partners = potential_partners.exclude(
-                university=matching_request.user.university
-            )
-    
-    # 4. 관리자가 자유롭게 선택할 수 있도록 모든 사용자 표시 (언어 조건 제거)
+    # 승인 대기 중인 사용자들만 필터링
+    potential_partners = User.objects.filter(id__in=pending_user_ids)
     matching_partners = list(potential_partners)
     
     # 파트너 정보 직렬화
@@ -438,6 +425,31 @@ def approve_matching_request(request, request_id):
         except Exception as e:
             # 채팅방 생성 실패해도 매칭은 성공으로 처리
             chat_room = None
+        
+        # 매칭 완료 알림 생성 (양쪽 사용자 모두에게)
+        from notifications.models import Notification
+        
+        # 요청자에게 알림
+        Notification.objects.create(
+            user=matching_request.user,
+            type='matching',
+            title='매칭 완료',
+            message=f'{partner.nickname}님과 언어교환 매칭이 완료되었습니다!',
+            is_read=False,
+            related_user_id=partner.id,
+            related_request_id=matching_request.id
+        )
+        
+        # 파트너에게 알림
+        Notification.objects.create(
+            user=partner,
+            type='matching',
+            title='매칭 완료',
+            message=f'{matching_request.user.nickname}님과 언어교환 매칭이 완료되었습니다!',
+            is_read=False,
+            related_user_id=matching_request.user.id,
+            related_request_id=matching_request.id
+        )
         
         # 파트너가 이미 매칭된 상태인지 확인
         partner_existing_matches = MatchingRequest.objects.filter(
