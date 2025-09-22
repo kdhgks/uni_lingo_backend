@@ -34,6 +34,19 @@ class UserSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
     
+    def update(self, instance, validated_data):
+        """프로필 이미지 업데이트 처리"""
+        # 기존 이미지가 있으면 삭제
+        if 'profile_image' in validated_data and instance.profile_image:
+            instance.profile_image.delete(save=False)
+        
+        # 나머지 필드들 업데이트
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
+        return instance
+    
     def to_representation(self, instance):
         """시리얼라이저 출력 시 프로필 이미지 URL 추가"""
         data = super().to_representation(instance)

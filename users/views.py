@@ -206,28 +206,23 @@ class ProfileView(generics.RetrieveUpdateAPIView):
             # 나머지 필드 업데이트
             serializer = self.get_serializer(user, data=data, partial=True)
             if serializer.is_valid():
-                serializer.save()
-                
-                # 프로필 이미지 URL 생성
-                if user.profile_image:
-                    # 프로필 이미지가 있으면 전체 URL 반환
-                    request = self.request
-                    profile_image_url = request.build_absolute_uri(user.profile_image.url)
-                    user.profile_image_url = profile_image_url
-                
-                # 업데이트된 사용자 정보 반환
-                updated_user_serializer = UserSerializer(user)
-                user_data = updated_user_serializer.data
-                
-                # 프로필 이미지 URL 추가
-                if user.profile_image:
-                    user_data['profile_image_url'] = request.build_absolute_uri(user.profile_image.url)
-                
-                return Response({
-                    'success': True,
-                    'message': '프로필이 성공적으로 업데이트되었습니다.',
-                    'user': user_data
-                }, status=status.HTTP_200_OK)
+                try:
+                    serializer.save()
+                    
+                    # 업데이트된 사용자 정보 반환
+                    updated_user_serializer = UserSerializer(user, context={'request': self.request})
+                    user_data = updated_user_serializer.data
+                    
+                    return Response({
+                        'success': True,
+                        'message': '프로필이 성공적으로 업데이트되었습니다.',
+                        'user': user_data
+                    }, status=status.HTTP_200_OK)
+                except Exception as e:
+                    return Response({
+                        'success': False,
+                        'message': f'프로필 업데이트 중 오류가 발생했습니다: {str(e)}'
+                    }, status=status.HTTP_400_BAD_REQUEST)
             
             return Response({
                 'success': False,
