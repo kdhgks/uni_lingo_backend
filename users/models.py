@@ -46,7 +46,7 @@ class User(AbstractUser):
     # 기본 정보
     email = models.EmailField(unique=True)
     nickname = models.CharField(max_length=50, unique=True)
-    profile_image = models.CharField(max_length=500, blank=True, null=True)  # 이모지 또는 이미지 URL
+    profile_image = models.ImageField(upload_to='profile_images/', blank=True, null=True)  # 프로필 이미지 파일
     phone = models.CharField(
         max_length=20, 
         validators=[RegexValidator(regex=r'^010\d{8}$', message='올바른 전화번호 형식이 아닙니다.')],

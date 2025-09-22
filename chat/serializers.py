@@ -16,6 +16,15 @@ class PartnerInfoSerializer(serializers.ModelSerializer):
             'teaching_languages', 'learning_languages', 'interests'
         ]
     
+    def to_representation(self, instance):
+        """시리얼라이저 출력 시 프로필 이미지 URL 추가"""
+        data = super().to_representation(instance)
+        if instance.profile_image:
+            request = self.context.get('request')
+            if request:
+                data['profile_image_url'] = request.build_absolute_uri(instance.profile_image.url)
+        return data
+    
     def get_teaching_languages(self, obj):
         """가르치는 언어들 반환"""
         return [lang.language for lang in obj.languages.filter(language_type='teaching')]
@@ -68,11 +77,15 @@ class ChatRoomSerializer(serializers.ModelSerializer):
         if request and hasattr(request, 'user'):
             partner = obj.get_partner(request.user)
             if partner:
-                return {
+                partner_data = {
                     'id': partner.id,
                     'nickname': partner.nickname,
                     'profile_image': partner.profile_image
                 }
+                # 프로필 이미지 URL 추가
+                if partner.profile_image:
+                    partner_data['profile_image_url'] = request.build_absolute_uri(partner.profile_image.url)
+                return partner_data
         return None
     
     def get_last_message(self, obj):

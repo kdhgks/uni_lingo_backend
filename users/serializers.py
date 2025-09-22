@@ -34,6 +34,15 @@ class UserSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
     
+    def to_representation(self, instance):
+        """시리얼라이저 출력 시 프로필 이미지 URL 추가"""
+        data = super().to_representation(instance)
+        if instance.profile_image:
+            request = self.context.get('request')
+            if request:
+                data['profile_image_url'] = request.build_absolute_uri(instance.profile_image.url)
+        return data
+    
     def get_teaching_languages(self, obj):
         """가르치는 언어들 반환"""
         return [lang.language for lang in obj.languages.filter(language_type='teaching')]
