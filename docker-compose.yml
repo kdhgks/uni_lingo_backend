@@ -23,7 +23,7 @@ services:
     image: nginx:alpine
     ports:
       - "80:80"
-      # SSL 적용시 "443:443" 추가
+      - "443:443"
     volumes:
       - static_volume:/static:ro
       - media_volume:/media:ro

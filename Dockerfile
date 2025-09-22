@@ -17,6 +17,9 @@ RUN pip install --no-cache-dir -r requirements_production.txt
 # 애플리케이션 코드 복사
 COPY . .
 
+ENV STATIC_ROOT=/app/staticfiles
+RUN mkdir -p $STATIC_ROOT
+
 # 정적 파일 수집
 RUN python manage.py collectstatic --noinput
 
